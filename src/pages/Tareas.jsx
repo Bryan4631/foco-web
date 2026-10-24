@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
+import { IconPlus } from '../components/Icons';
+import { fmtFecha, hoy } from '../utils/format';
 
 export default function Tareas() {
   const [tareas, setTareas] = useState([]);
   const [areas, setAreas] = useState([]); // Para el select de la relación
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Estados del formulario
   const [titulo, setTitulo] = useState('');
   const [fecha_limite, setFecha_limite] = useState('');
@@ -28,16 +30,13 @@ export default function Tareas() {
   const fetchData = async () => {
     try {
       // Cargamos tareas y áreas al mismo tiempo
-      const [resTareas, resAreas] = await Promise.all([
-        api.get('/tareas'),
-        api.get('/areas')
-      ]);
+      const [resTareas, resAreas] = await Promise.all([api.get('/tareas'), api.get('/areas')]);
       setTareas(resTareas.data);
       setAreas(resAreas.data);
-      
+
       // Si hay áreas, seleccionamos la primera por defecto
       if (resAreas.data.length > 0 && !area_id) {
-        setArea_id(resAreas.data[0].id); 
+        setArea_id(resAreas.data[0].id);
       }
     } catch (err) {
       if (err.response?.status === 401) {
@@ -54,21 +53,21 @@ export default function Tareas() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormErrors({});
-    
-    const payload = { 
-      tarea: { 
-        titulo, 
+
+    const payload = {
+      tarea: {
+        titulo,
         fecha_limite: fecha_limite || null, // Si está vacío, enviamos null
-        prioridad, 
-        estimado_minutos, 
-        area_id 
-      } 
+        prioridad,
+        estimado_minutos,
+        area_id,
+      },
     };
 
     try {
       if (editId) {
         const res = await api.put(`/tareas/${editId}`, payload);
-        setTareas(tareas.map(t => t.id === editId ? res.data : t));
+        setTareas(tareas.map((t) => (t.id === editId ? res.data : t)));
       } else {
         const res = await api.post('/tareas', payload);
         setTareas([...tareas, res.data]);
@@ -88,7 +87,7 @@ export default function Tareas() {
     if (!window.confirm('¿Seguro que quieres eliminar esta tarea?')) return;
     try {
       await api.delete(`/tareas/${id}`);
-      setTareas(tareas.filter(t => t.id !== id));
+      setTareas(tareas.filter((t) => t.id !== id));
     } catch (err) {
       alert('Error al eliminar la tarea.');
     }
@@ -101,6 +100,7 @@ export default function Tareas() {
     setEstimado_minutos(tarea.estimado_minutos || 60);
     setArea_id(tarea.area_id);
     setEditId(tarea.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
@@ -109,105 +109,163 @@ export default function Tareas() {
     setPrioridad('media');
     setEstimado_minutos(60);
     setEditId(null);
+    setFormErrors({});
   };
 
-  // Función para mostrar el nombre del área en la tabla en vez del ID
-  const getAreaName = (id) => {
-    const area = areas.find(a => a.id === id);
-    return area ? area.nombre : 'Sin área';
-  };
+  const getArea = (id) => areas.find((a) => a.id === id);
 
-  if (loading) return <div style={{ padding: '20px' }}>Cargando tareas...</div>;
+  if (loading) {
+    return (
+      <div className="state-box">
+        <div className="spinner" />
+        <p>Cargando tareas...</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Gestión de Tareas</h2>
-        <button onClick={() => { logout(); navigate('/login'); }} style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px' }}>
-          Cerrar Sesión
-        </button>
-      </div>
+    <>
+      <header className="page-header">
+        <div>
+          <h1>Tareas</h1>
+          <p>Todo lo que tienes por hacer, con su prioridad y fecha límite.</p>
+        </div>
+      </header>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <div className="alert alert-error">{error}</div>}
 
-      <form onSubmit={handleSubmit} style={{ background: '#f3f4f6', color: '#333', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-        <h3>{editId ? 'Editar Tarea' : 'Nueva Tarea'}</h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-          <div>
-            <label>Título:</label><br/>
-            <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} style={{ width: '100%', padding: '5px' }} />
-            {formErrors.titulo && <span style={{ color: 'red', fontSize: '12px' }}>{formErrors.titulo[0]}</span>}
+      <form onSubmit={handleSubmit} className="panel">
+        <h3 className="panel-title">{editId ? 'Editar tarea' : 'Nueva tarea'}</h3>
+
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor="titulo">Título</label>
+            <input
+              id="titulo"
+              type="text"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ej: Estudiar para la prueba"
+            />
+            {formErrors.titulo && <span className="field-error">{formErrors.titulo[0]}</span>}
           </div>
 
-          <div>
-            <label>Área (Relación):</label><br/>
-            <select value={area_id} onChange={(e) => setArea_id(e.target.value)} style={{ width: '100%', padding: '5px' }}>
-              {areas.map(a => (
-                <option key={a.id} value={a.id}>{a.nombre}</option>
+          <div className="field">
+            <label htmlFor="area">Área</label>
+            <select id="area" value={area_id} onChange={(e) => setArea_id(e.target.value)}>
+              {areas.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nombre}
+                </option>
               ))}
             </select>
-            {formErrors.area_id && <span style={{ color: 'red', fontSize: '12px' }}>{formErrors.area_id[0]}</span>}
+            {formErrors.area_id && <span className="field-error">{formErrors.area_id[0]}</span>}
           </div>
 
-          <div>
-            <label>Fecha Límite:</label><br/>
-            <input type="date" value={fecha_limite} onChange={(e) => setFecha_limite(e.target.value)} style={{ width: '100%', padding: '5px' }} />
+          <div className="field">
+            <label htmlFor="fecha">Fecha límite</label>
+            <input
+              id="fecha"
+              type="date"
+              value={fecha_limite}
+              onChange={(e) => setFecha_limite(e.target.value)}
+            />
           </div>
 
-          <div>
-            <label>Prioridad:</label><br/>
-            <select value={prioridad} onChange={(e) => setPrioridad(e.target.value)} style={{ width: '100%', padding: '5px' }}>
+          <div className="field">
+            <label htmlFor="prioridad">Prioridad</label>
+            <select id="prioridad" value={prioridad} onChange={(e) => setPrioridad(e.target.value)}>
               <option value="baja">Baja</option>
               <option value="media">Media</option>
               <option value="alta">Alta</option>
             </select>
           </div>
 
-          <div>
-            <label>Estimado (minutos):</label><br/>
-            <input type="number" value={estimado_minutos} onChange={(e) => setEstimado_minutos(e.target.value)} style={{ width: '100%', padding: '5px' }} />
+          <div className="field">
+            <label htmlFor="estimado">Estimado (minutos)</label>
+            <input
+              id="estimado"
+              type="number"
+              min="0"
+              value={estimado_minutos}
+              onChange={(e) => setEstimado_minutos(e.target.value)}
+            />
           </div>
         </div>
 
-        <button type="submit" style={{ marginTop: '15px', padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          {editId ? 'Guardar Cambios' : 'Crear Tarea'}
-        </button>
-        {editId && (
-          <button type="button" onClick={resetForm} style={{ marginTop: '15px', marginLeft: '10px', padding: '8px', background: 'gray', color: 'white', border: 'none', borderRadius: '4px' }}>
-            Cancelar
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary">
+            {!editId && <IconPlus />}
+            {editId ? 'Guardar cambios' : 'Crear tarea'}
           </button>
-        )}
+          {editId && (
+            <button type="button" onClick={resetForm} className="btn btn-ghost">
+              Cancelar
+            </button>
+          )}
+        </div>
       </form>
 
-      {/* Tabla de Tareas */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #ccc' }}>
-            <th>Título</th>
-            <th>Área</th>
-            <th>Prioridad</th>
-            <th>Fecha Límite</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tareas.map(tarea => (
-            <tr key={tarea.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '8px 0' }}>{tarea.titulo}</td>
-              <td>{getAreaName(tarea.area_id)}</td>
-              <td>{tarea.prioridad}</td>
-              <td>{tarea.fecha_limite}</td>
-              <td>
-                <button onClick={() => handleEditClick(tarea)} style={{ marginRight: '10px', cursor: 'pointer' }}>Editar</button>
-                <button onClick={() => handleDelete(tarea.id)} style={{ color: 'red', cursor: 'pointer' }}>Eliminar</button>
-              </td>
+      {/* Tabla de tareas */}
+      <div className="table-wrap" style={{ marginTop: 24 }}>
+        <table>
+          <thead>
+            <tr>
+              <th>Tarea</th>
+              <th>Área</th>
+              <th>Prioridad</th>
+              <th>Fecha límite</th>
+              <th className="th-actions">Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      
-      <button onClick={() => navigate('/dashboard')} style={{ marginTop: '20px', padding: '10px', cursor: 'pointer' }}>Volver al Panel</button>
-    </div>
+          </thead>
+          <tbody>
+            {tareas.length === 0 && (
+              <tr>
+                <td colSpan="5">
+                  <div className="empty" style={{ border: 'none' }}>
+                    Aún no tienes tareas. Crea la primera arriba.
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {tareas.map((tarea) => {
+              const area = getArea(tarea.area_id);
+              const vencida = tarea.fecha_limite && String(tarea.fecha_limite).slice(0, 10) < hoy();
+              return (
+                <tr key={tarea.id}>
+                  <td>
+                    <div className="cell-title">{tarea.titulo}</div>
+                    {tarea.estimado_minutos ? (
+                      <div className="cell-sub">{tarea.estimado_minutos} min estimados</div>
+                    ) : null}
+                  </td>
+                  <td>
+                    <span className="cell-area">
+                      <span className="dot" style={{ background: area?.color || '#6b6b84' }} />
+                      {area ? area.nombre : 'Sin área'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge badge-${tarea.prioridad || 'media'}`}>{tarea.prioridad}</span>
+                  </td>
+                  <td className={vencida ? 'overdue' : ''}>{fmtFecha(tarea.fecha_limite)}</td>
+                  <td className="td-actions">
+                    <div className="row-actions">
+                      <button onClick={() => handleEditClick(tarea)} className="btn btn-ghost btn-sm">
+                        Editar
+                      </button>
+                      <button onClick={() => handleDelete(tarea.id)} className="btn btn-danger-ghost btn-sm">
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

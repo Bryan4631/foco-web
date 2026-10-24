@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
+import { IconPlus } from '../components/Icons';
 
 export default function Areas() {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Estados para el formulario
   const [nombre, setNombre] = useState('');
   const [color, setColor] = useState('#2563eb');
-  const [tipo, setTipo] = useState('personal'); // NUEVO ESTADO
+  const [tipo, setTipo] = useState('personal');
   const [editId, setEditId] = useState(null);
   const [formErrors, setFormErrors] = useState({});
 
@@ -39,32 +40,33 @@ export default function Areas() {
     }
   };
 
+  const resetForm = () => {
+    setNombre('');
+    setTipo('personal');
+    setColor('#2563eb');
+    setEditId(null);
+    setFormErrors({});
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormErrors({});
-    
-    // Enviamos el tipo también
+
     const payload = { area: { nombre, color, tipo } };
 
     try {
       if (editId) {
-        // Editar
         const res = await api.put(`/areas/${editId}`, payload);
-        setAreas(areas.map(a => a.id === editId ? res.data : a));
+        setAreas(areas.map((a) => (a.id === editId ? res.data : a)));
       } else {
-        // Crear
         const res = await api.post('/areas', payload);
         setAreas([...areas, res.data]);
       }
-      // Limpiar formulario
-      setNombre('');
-      setTipo('personal');
-      setColor('#2563eb');
-      setEditId(null);
+      resetForm();
     } catch (err) {
       // Manejo de errores 422 (Validaciones de Rails)
       if (err.response?.status === 422) {
-        setFormErrors(err.response.data.errors); // Ej: { nombre: ["ya existe"], tipo: ["no puede estar en blanco"] }
+        setFormErrors(err.response.data.errors);
       } else {
         setError('Error al guardar el área.');
       }
@@ -75,7 +77,7 @@ export default function Areas() {
     if (!window.confirm('¿Seguro que quieres eliminar esta área?')) return;
     try {
       await api.delete(`/areas/${id}`);
-      setAreas(areas.filter(a => a.id !== id));
+      setAreas(areas.filter((a) => a.id !== id));
     } catch (err) {
       alert('No se puede eliminar un área que tiene tareas asociadas (Restricción de la base de datos).');
     }
@@ -86,74 +88,107 @@ export default function Areas() {
     setColor(area.color || '#2563eb');
     setTipo(area.tipo || 'personal');
     setEditId(area.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (loading) return <div style={{ padding: '20px' }}>Cargando áreas...</div>;
+  if (loading) {
+    return (
+      <div className="state-box">
+        <div className="spinner" />
+        <p>Cargando áreas...</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Gestión de Áreas</h2>
-        <button onClick={() => { logout(); navigate('/login'); }} style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px' }}>
-          Cerrar Sesión
-        </button>
-      </div>
+    <>
+      <header className="page-header">
+        <div>
+          <h1>Áreas</h1>
+          <p>Agrupa tus tareas y horarios por estudio, trabajo, emprendimiento o vida personal.</p>
+        </div>
+      </header>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <div className="alert alert-error">{error}</div>}
 
       {/* Formulario */}
-      <form onSubmit={handleSubmit} style={{ background: '#f3f4f6', color: '#333', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-        <h3>{editId ? 'Editar Área' : 'Nueva Área'}</h3>
-        
-        <div style={{ marginBottom: '10px' }}>
-          <label>Nombre: </label>
-          <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} style={{ padding: '5px', marginLeft: '10px' }} />
-          {formErrors.nombre && <span style={{ color: 'red', fontSize: '12px', marginLeft: '10px' }}>{formErrors.nombre[0]}</span>}
+      <form onSubmit={handleSubmit} className="panel">
+        <h3 className="panel-title">{editId ? 'Editar área' : 'Nueva área'}</h3>
+
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor="nombre">Nombre</label>
+            <input
+              id="nombre"
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Ej: Universidad"
+            />
+            {formErrors.nombre && <span className="field-error">{formErrors.nombre[0]}</span>}
+          </div>
+
+          <div className="field">
+            <label htmlFor="tipo">Tipo</label>
+            <select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+              <option value="estudio">Estudio</option>
+              <option value="emprendimiento">Emprendimiento</option>
+              <option value="trabajo">Trabajo</option>
+              <option value="personal">Personal</option>
+            </select>
+            {formErrors.tipo && <span className="field-error">{formErrors.tipo[0]}</span>}
+          </div>
+
+          <div className="field">
+            <label htmlFor="color">Color</label>
+            <input id="color" type="color" value={color} onChange={(e) => setColor(e.target.value)} />
+          </div>
         </div>
 
-        {/* NUEVO SELECT PARA EL TIPO */}
-        <div style={{ marginBottom: '10px' }}>
-          <label>Tipo: </label>
-          <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={{ padding: '5px', marginLeft: '10px' }}>
-            <option value="estudio">Estudio</option>
-            <option value="emprendimiento">Emprendimiento</option>
-            <option value="trabajo">Trabajo</option>
-            <option value="personal">Personal</option>
-          </select>
-          {formErrors.tipo && <span style={{ color: 'red', fontSize: '12px', marginLeft: '10px' }}>{formErrors.tipo[0]}</span>}
-        </div>
-
-        <div style={{ marginBottom: '10px' }}>
-          <label>Color: </label>
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ marginLeft: '10px' }} />
-        </div>
-
-        <button type="submit" style={{ padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', marginRight: '10px', cursor: 'pointer' }}>
-          {editId ? 'Guardar Cambios' : 'Crear Área'}
-        </button>
-        {editId && (
-          <button type="button" onClick={() => { setEditId(null); setNombre(''); setTipo('personal'); }} style={{ padding: '8px', background: 'gray', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Cancelar
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary">
+            {!editId && <IconPlus />}
+            {editId ? 'Guardar cambios' : 'Crear área'}
           </button>
-        )}
+          {editId && (
+            <button type="button" onClick={resetForm} className="btn btn-ghost">
+              Cancelar
+            </button>
+          )}
+        </div>
       </form>
 
-      {/* Lista de Áreas */}
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {areas.map(area => (
-          <li key={area.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #ccc' }}>
-            <div>
-              <span style={{ display: 'inline-block', width: '15px', height: '15px', background: area.color || '#ccc', borderRadius: '50%', marginRight: '10px' }}></span>
-              <strong>{area.nombre}</strong> <span style={{ fontSize: '12px', color: 'gray' }}>({area.tipo})</span>
+      {/* Lista de áreas */}
+      <div className="list" style={{ marginTop: 24 }}>
+        {areas.length === 0 && (
+          <div className="empty">Todavía no tienes áreas. Crea la primera arriba.</div>
+        )}
+
+        {areas.map((area) => (
+          <div
+            key={area.id}
+            className="list-item"
+            style={{ borderLeftColor: area.color || '#6b6b84' }}
+          >
+            <div className="list-main">
+              <span className="dot" style={{ background: area.color || '#6b6b84' }} />
+              <div style={{ minWidth: 0 }}>
+                <div className="list-title">{area.nombre}</div>
+              </div>
+              <span className="badge badge-accent">{area.tipo}</span>
             </div>
-            <div>
-              <button onClick={() => handleEditClick(area)} style={{ marginRight: '10px', cursor: 'pointer' }}>Editar</button>
-              <button onClick={() => handleDelete(area.id)} style={{ color: 'red', cursor: 'pointer' }}>Eliminar</button>
+
+            <div className="row-actions">
+              <button onClick={() => handleEditClick(area)} className="btn btn-ghost btn-sm">
+                Editar
+              </button>
+              <button onClick={() => handleDelete(area.id)} className="btn btn-danger-ghost btn-sm">
+                Eliminar
+              </button>
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
-      <button onClick={() => navigate('/dashboard')} style={{ marginTop: '20px', padding: '10px', cursor: 'pointer' }}>Volver al Panel</button>
-    </div>
+      </div>
+    </>
   );
 }
