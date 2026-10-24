@@ -846,6 +846,22 @@ tbody tr:last-child td {
   color: var(--faint);
 }
 
+.auth-switch {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.auth-switch a {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
 /* ============ Responsive ============ */
 @media (max-width: 860px) {
   .app-shell {

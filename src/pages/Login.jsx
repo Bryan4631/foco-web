@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { IconLogo, IconFolder, IconCheck, IconCalendar, IconSparkle } from '../components/Icons';
+import { useNavigate, Link } from 'react-router-dom';
+import AuthHero from '../components/AuthHero';
 
 export default function Login() {
   const [email, setEmail] = useState('demo@foco.cl');
@@ -32,41 +32,7 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <section className="login-hero">
-        <div className="brand">
-          <div className="brand-mark">
-            <IconLogo />
-          </div>
-          <span className="brand-name">Foco</span>
-        </div>
-
-        <h2>
-          Tu semana, <span>con foco</span>.
-        </h2>
-        <p>
-          Organiza tus estudios y tu emprendimiento en un solo lugar, con un horario fijo y
-          tareas que sí se cumplen.
-        </p>
-
-        <ul className="feature-list">
-          <li>
-            <span className="stat-icon"><IconFolder /></span>
-            Áreas para separar estudio, trabajo y emprendimiento
-          </li>
-          <li>
-            <span className="stat-icon"><IconCheck /></span>
-            Tareas con prioridad, fecha límite y tiempo estimado
-          </li>
-          <li>
-            <span className="stat-icon"><IconCalendar /></span>
-            Bloques de horario fijo para cada día de la semana
-          </li>
-          <li>
-            <span className="stat-icon"><IconSparkle /></span>
-            Planificación semanal asistida por IA
-          </li>
-        </ul>
-      </section>
+      <AuthHero />
 
       <section className="login-side">
         <div className="login-card">
@@ -107,6 +73,9 @@ export default function Login() {
             </button>
           </form>
 
+          <p className="auth-switch">
+            ¿No tienes cuenta? <Link to="/registro">Regístrate</Link>
+          </p>
           <p className="login-hint">Cuenta de demostración precargada</p>
         </div>
       </section>
