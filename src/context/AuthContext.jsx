@@ -24,13 +24,31 @@ export const AuthProvider = ({ children }) => {
     return response;
   };
 
+  // Crea la cuenta y deja la sesión iniciada (la API devuelve el token)
+  const register = async (nombre, email, password) => {
+    const response = await api.post('/auth/register', { nombre, email, password });
+    const { token } = response.data;
+    localStorage.setItem('token', token);
+    setUser({ token });
+    return response;
+  };
+
+  // Cierra la sesión en el cliente y revoca el token en la API (DELETE /auth/logout)
   const logout = () => {
+    const token = localStorage.getItem('token');
     localStorage.removeItem('token');
     setUser(null);
+    if (token) {
+      // Se envía el token a mano porque ya lo borramos de localStorage.
+      // Si falla (token vencido, sin conexión), la sesión local ya está cerrada.
+      api
+        .delete('/auth/logout', { headers: { Authorization: `Bearer ${token}` } })
+        .catch(() => {});
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
