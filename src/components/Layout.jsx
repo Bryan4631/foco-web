@@ -43,9 +43,14 @@ export default function Layout({ children }) {
         </nav>
 
         <div className="sidebar-footer">
-          <button onClick={handleLogout} className="btn btn-ghost btn-block">
+          <button
+            onClick={handleLogout}
+            className="btn btn-ghost btn-block"
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+          >
             <IconLogout />
-            Cerrar sesión
+            <span className="btn-label">Cerrar sesión</span>
           </button>
         </div>
       </aside>

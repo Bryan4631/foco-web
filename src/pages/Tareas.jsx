@@ -240,16 +240,18 @@ export default function Tareas() {
                       <div className="cell-sub">{tarea.estimado_minutos} min estimados</div>
                     ) : null}
                   </td>
-                  <td>
+                  <td data-label="Área">
                     <span className="cell-area">
                       <span className="dot" style={{ background: area?.color || '#6b6b84' }} />
                       {area ? area.nombre : 'Sin área'}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Prioridad">
                     <span className={`badge badge-${tarea.prioridad || 'media'}`}>{tarea.prioridad}</span>
                   </td>
-                  <td className={vencida ? 'overdue' : ''}>{fmtFecha(tarea.fecha_limite)}</td>
+                  <td data-label="Fecha límite" className={vencida ? 'overdue' : ''}>
+                    {fmtFecha(tarea.fecha_limite)}
+                  </td>
                   <td className="td-actions">
                     <div className="row-actions">
                       <button onClick={() => handleEditClick(tarea)} className="btn btn-ghost btn-sm">
