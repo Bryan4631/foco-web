@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Aquí va la URL de tu API en Render
-  baseURL: 'https://foco-api-rk4y.onrender.com/api/v1',
+  // La URL de la API se configura con VITE_API_URL (ver .env.example).
+  // Si no existe, usa la API de producción en Render.
+  baseURL: import.meta.env.VITE_API_URL || 'https://foco-api-rk4y.onrender.com/api/v1',
 });
 
 // Este interceptor adjunta el token automáticamente en cada petición
