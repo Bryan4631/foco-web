@@ -3,7 +3,6 @@ dist
 .env*
 !.env.example
 .git
-.gitignore
 Dockerfile
 .dockerignore
 Jenkinsfile
