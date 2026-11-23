@@ -6,7 +6,7 @@
 //
 // Flujo:
 //   Checkout -> Lint -> Build image (compila la SPA; falla si el build de Vite falla)
-//   (solo rama `main`) -> Deploy -> Health Check
+//   (solo rama `production`) -> Deploy -> Health Check
 //
 // Produccion: el contenedor se publica en 127.0.0.1:4109 y el reverse proxy del servidor
 // (Nginx + Certbot) expone https://focoweb.frubilarz.cl hacia ese puerto.
@@ -58,7 +58,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { branch 'main' }
+            when { branch 'production' }
             steps {
                 sh '''
                     docker rm -f "$APP_NAME" || true
@@ -72,7 +72,7 @@ pipeline {
         }
 
         stage('Health Check') {
-            when { branch 'main' }
+            when { branch 'production' }
             steps {
                 // nginx:alpine trae wget (busybox) pero no curl; se ejecuta dentro del contenedor
                 // porque el 127.0.0.1 de Jenkins no es el del host.
