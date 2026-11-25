@@ -30,15 +30,15 @@ libretas, calendarios y apps, sin una vista única de la semana. Foco centraliza
 | Backend | Ruby on Rails 8 (API REST JSON) — repo `foco-api` |
 | Base de datos | PostgreSQL |
 | Autenticación | JWT (Bearer token) |
-| Despliegue | Vercel (front), Render (API) |
+| Despliegue | Jenkins: front en `focoweb.frubilarz.cl`, API en `apifoco.frubilarz.cl` |
 | Calidad | oxlint |
 
 ## 5. Arquitectura
 
 ```mermaid
 flowchart LR
-    U[Navegador] --> F[React + Vite<br/>Vercel]
-    F -- "HTTPS + JSON<br/>Authorization: Bearer token" --> A[API Rails<br/>Render]
+    U[Navegador] --> F[React + Vite<br/>focoweb.frubilarz.cl]
+    F -- "HTTPS + JSON<br/>Authorization: Bearer token" --> A[API Rails<br/>apifoco.frubilarz.cl]
     A --> D[(PostgreSQL)]
 ```
 
@@ -102,7 +102,7 @@ la de producción, borra `VITE_API_URL` del `.env`.
 | --- | --- | --- |
 | `VITE_API_URL` | URL base de la API. Si falta, se usa la API de producción. | `http://localhost:3000/api/v1` |
 
-En Vercel se define en **Settings → Environment Variables**. No hay secretos en el frontend.
+En producción se define en el build del despliegue (Jenkins). No hay secretos en el frontend.
 
 ## 10. Tests
 
@@ -115,17 +115,28 @@ npm run build
 
 ## 11. URL de producción
 
-- Frontend: <https://foco-web-gamma.vercel.app>
-- API: <https://foco-api-rk4y.onrender.com/api/v1>
-
-> La API usa un plan gratuito que se "duerme" tras un rato sin uso: la primera petición puede
-> tardar unos segundos.
+- Frontend: <https://focoweb.frubilarz.cl>
+- API: <https://apifoco.frubilarz.cl/api/v1>
 
 ## 12. Credenciales de prueba
 
-| Campo | Valor |
-| --- | --- |
-| Correo | `demo@foco.cl` |
-| Contraseña | `demo12345` |
+| Rol | Correo | Contraseña |
+| --- | --- | --- |
+| Usuario | `demo@foco.cl` | `demo12345` |
+| Administrador | `admin@foco.cl` | `admin12345` |
 
 El usuario demo viene con áreas, tareas y bloques de ejemplo (datos semilla de la API).
+
+## 13. Roles (Tarea 2)
+
+La web lee el rol del usuario desde `GET /me` y muestra u oculta opciones: el enlace y la página
+**Usuarios** solo aparecen para el administrador. Aun así, la autorización real se verifica en la
+API: si un usuario sin permiso llama a un endpoint restringido, la API responde **403** y la web
+muestra *"Acceso denegado"*. La matriz de permisos está en el README de
+[`foco-api`](https://github.com/Bryan4631/foco-api).
+
+## 14. Aplicación móvil
+
+La app móvil (React Native + Expo) vive en la carpeta [`mobile/`](./mobile) de este repositorio y
+consume la misma API. Ver [`mobile/README.md`](./mobile/README.md) para pantallas, instalación,
+autenticación móvil y tests.

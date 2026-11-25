@@ -9,8 +9,12 @@ const links = [
   { to: '/bloques', label: 'Horario', icon: <IconCalendar /> },
 ];
 
+// Solo el administrador ve este enlace (la API además responde 403 a los demás)
+const adminLink = { to: '/usuarios', label: 'Usuarios', icon: <IconFolder /> };
+
 export default function Layout({ children }) {
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
+  const menu = isAdmin ? [...links, adminLink] : links;
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -30,7 +34,7 @@ export default function Layout({ children }) {
 
         <nav className="nav">
           <span className="nav-label">Menú</span>
-          {links.map((l) => (
+          {menu.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}

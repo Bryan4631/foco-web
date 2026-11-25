@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Areas from './pages/Areas';
 import Tareas from './pages/Tareas';
 import Bloques from './pages/Bloques';
+import Usuarios from './pages/Usuarios';
 
 // Protege las rutas y las envuelve con el menú lateral (Layout)
 const ProtectedLayout = () => {
@@ -40,6 +41,7 @@ function App() {
             <Route path="/areas" element={<Areas />} />
             <Route path="/tareas" element={<Tareas />} />
             <Route path="/bloques" element={<Bloques />} />
+            <Route path="/usuarios" element={<Usuarios />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" />} />

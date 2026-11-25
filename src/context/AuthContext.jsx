@@ -12,24 +12,35 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       setUser({ token });
+      // Tarea 2: se consulta /me para conocer el rol (la interfaz muestra u oculta opciones según el rol)
+      api
+        .get('/me')
+        .then((res) => setUser({ token, ...res.data.user }))
+        .catch((err) => {
+          // Token vencido o revocado: se cierra la sesión local
+          if (err.response?.status === 401) {
+            localStorage.removeItem('token');
+            setUser(null);
+          }
+        });
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
-    const { token } = response.data;
+    const { token, user: apiUser } = response.data;
     localStorage.setItem('token', token);
-    setUser({ token });
+    setUser({ token, ...apiUser });
     return response;
   };
 
   // Crea la cuenta y deja la sesión iniciada (la API devuelve el token)
   const register = async (nombre, email, password) => {
     const response = await api.post('/auth/register', { nombre, email, password });
-    const { token } = response.data;
+    const { token, user: apiUser } = response.data;
     localStorage.setItem('token', token);
-    setUser({ token });
+    setUser({ token, ...apiUser });
     return response;
   };
 
@@ -48,7 +59,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, register, logout, loading, isAdmin: user?.rol === 'admin' }}
+    >
       {children}
     </AuthContext.Provider>
   );
